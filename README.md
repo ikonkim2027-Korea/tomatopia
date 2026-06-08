@@ -7,7 +7,7 @@ sprout, grow, flower, and fruit — or wilt and yellow when conditions are wrong
 
 > Inspired by the Concord Consortium's *Virtual Greenhouse*.
 
-🔗 **Live demo:** https://ikonkim2027.github.io/tomatopia/
+🔗 **Live demo:** https://ikonkim2027-korea.github.io/tomatopia/
 
 ## What it teaches (NGSS-aligned)
 
