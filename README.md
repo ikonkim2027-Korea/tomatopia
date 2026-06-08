@@ -12,12 +12,15 @@ sprout, grow, flower, and fruit — or wilt and yellow when conditions are wrong
 ## What it teaches (NGSS-aligned)
 
 - **A plant's needs** — light, water, warmth, and nutrients, with realistic amounts.
+- **A full life cycle** — germination → early growth → vegetative growth → flowering →
+  **pollination** → fruit development → **ripening** → ripe (all on one continuous plant).
 - **Dose-response** — too little *and* too much of anything is harmful (over-watering
   drowns roots; over-fertilizing burns them; too hot drops the flowers).
 - **The Limiting Factor (Liebig's Law of the Minimum)** — a plant grows only as well as
   its *scarcest* need allows.
-- **Fair testing** — guided missions isolate one variable at a time so students can see
-  cause and effect.
+- **Pollination** — flowers need a shake (wind/bee) to set fruit.
+- **Harvest timing** — pick too early and fruit is small and sour; too late and it rots.
+- **A circular, zero-waste garden** — spoiled fruit becomes compost that feeds the next plant.
 
 The science model uses real horticultural ranges for *Solanum lycopersicum* (e.g. ideal
 temperature ~18–27 °C, 6–8 h of sun, steady moisture, balanced fertility). See
@@ -25,11 +28,14 @@ temperature ~18–27 °C, 6–8 h of sun, steady moisture, balanced fertility). 
 
 ## How to play
 
-1. Pick a gardener nickname (no real names needed).
-2. Work through the **Missions** — each teaches one idea — or open the **Free Greenhouse**
-   sandbox to experiment.
-3. Move the sliders, press **Play**, and watch your tomato react. Read the speech bubble
-   and the *Scientist's Note* to learn why.
+1. Pick a gardener nickname (no real names needed — progress auto-saves in your browser).
+2. Follow the **Missions**: they unlock one at a time and auto-advance as your plant hits
+   each life-cycle milestone. Or switch to **Free Play** to grow without missions.
+3. Move the sliders, press **Play**, and watch your tomato react. Press **🐝 Pollinate**
+   when it flowers, and **🧺 Harvest** when the fruit is ripe and red.
+4. **Score points** by harvest weight — **1 kg = 10 points** (100 g = 1 point). Heavier,
+   riper tomatoes score more. Check the **🏆 Leaderboard** and your **👤 Profile**.
+5. Read the *Scientist's Note* on each mission to learn the why.
 
 ## Tech
 
