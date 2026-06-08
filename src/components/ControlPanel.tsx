@@ -12,7 +12,6 @@ const META: { key: FactorKey; icon: string; name: string; unit: string }[] = [
 export default function ControlPanel() {
   const env = useGame((s) => s.env);
   const setControl = useGame((s) => s.setControl);
-  const isLocked = useGame((s) => s.isLocked);
 
   return (
     <div className="panel">
@@ -26,10 +25,13 @@ export default function ControlPanel() {
           unit={m.unit}
           value={env[m.key]}
           config={FACTORS[m.key]}
-          locked={isLocked(m.key)}
+          locked={false}
           onChange={(v) => setControl(m.key, v)}
         />
       ))}
+      <p style={{ fontSize: 12, color: 'var(--ink-soft)', margin: '4px 2px 0' }}>
+        The green band on each slider is the tomato's <b>ideal</b> range.
+      </p>
     </div>
   );
 }

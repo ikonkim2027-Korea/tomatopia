@@ -1,95 +1,118 @@
 /**
- * Maps simulation numbers to the things the UI draws: the life-cycle stage and
- * the plant's visible "mood" (wilting, yellowing, cold, etc.).
+ * Maps simulation numbers to what the UI draws: the life-cycle phase, the fruit's
+ * colour as it ripens, and the plant's "mood" (wilting, yellowing, cold, ...).
  */
 import {
   type Environment,
   type FactorKey,
   type PlantState,
   FACTORS,
+  FLOWER_CAP,
+  FRUIT_VISIBLE,
+  ROT_DAYS,
   getFactors,
   STRESS_THRESHOLD,
 } from './model';
 
-export type Stage =
+export type Phase =
   | 'seed'
-  | 'sprout'
-  | 'seedling'
+  | 'germination'
+  | 'early'
   | 'vegetative'
   | 'flowering'
   | 'fruiting'
-  | 'ripe';
+  | 'ripening'
+  | 'ripe'
+  | 'overripe'
+  | 'rotten'
+  | 'dead';
 
-export const STAGE_ORDER: Stage[] = [
+export const PHASE_ORDER: Phase[] = [
   'seed',
-  'sprout',
-  'seedling',
+  'germination',
+  'early',
   'vegetative',
   'flowering',
   'fruiting',
+  'ripening',
   'ripe',
 ];
 
-const STAGE_THRESHOLDS: { stage: Stage; min: number }[] = [
-  { stage: 'ripe', min: 92 },
-  { stage: 'fruiting', min: 76 },
-  { stage: 'flowering', min: 58 },
-  { stage: 'vegetative', min: 38 },
-  { stage: 'seedling', min: 18 },
-  { stage: 'sprout', min: 4 },
-  { stage: 'seed', min: 0 },
-];
-
-export const STAGE_LABEL: Record<Stage, string> = {
+export const PHASE_LABEL: Record<Phase, string> = {
   seed: 'Seed',
-  sprout: 'Sprout',
-  seedling: 'Seedling',
+  germination: 'Germinating',
+  early: 'Seedling',
   vegetative: 'Leafy plant',
   flowering: 'Flowering',
   fruiting: 'Green fruit',
-  ripe: 'Ripe tomato',
+  ripening: 'Ripening',
+  ripe: 'Ripe 🍅',
+  overripe: 'Overripe',
+  rotten: 'Rotten',
+  dead: 'Wilted away',
 };
 
-/** Discrete life-cycle stage from growth progress (0-100). */
-export function stageFromGrowth(growth: number): Stage {
-  for (const t of STAGE_THRESHOLDS) {
-    if (growth >= t.min) return t.stage;
-  }
-  return 'seed';
+export function phaseOf(plant: PlantState): Phase {
+  if (!plant.alive) return 'dead';
+  if (plant.rotted) return 'rotten';
+  const g = plant.growth;
+  if (g < 4) return 'seed';
+  if (g < 16) return 'germination';
+  if (g < 32) return 'early';
+  if (g < FLOWER_CAP - 18) return 'vegetative'; // < 52
+  if (!plant.pollinated) return g >= FLOWER_CAP - 18 ? 'flowering' : 'vegetative';
+  // pollinated:
+  if (g < 100) return 'fruiting';
+  if (plant.ripeness < 80) return 'ripening';
+  if (plant.overripeDays > ROT_DAYS * 0.55) return 'overripe';
+  return 'ripe';
+}
+
+export type FruitColor = 'none' | 'green' | 'orange' | 'red' | 'deepred' | 'rotten';
+
+export function fruitColorOf(plant: PlantState): FruitColor {
+  if (plant.rotted) return 'rotten';
+  if (!plant.pollinated || plant.growth < FRUIT_VISIBLE) return 'none';
+  const r = plant.ripeness;
+  if (plant.overripeDays > ROT_DAYS * 0.55) return 'deepred';
+  if (r < 35) return 'green';
+  if (r < 70) return 'orange';
+  if (r < 95) return 'red';
+  return 'red';
 }
 
 export type Mood =
   | 'healthy'
-  | 'wilting' // low water
-  | 'yellowing' // low nutrients
-  | 'cold' // low temperature
-  | 'scorched' // high temperature / heat
-  | 'leggy' // low light
-  | 'drowning' // too much water
+  | 'wilting'
+  | 'yellowing'
+  | 'cold'
+  | 'scorched'
+  | 'leggy'
+  | 'drowning'
   | 'dead';
 
 export interface PlantLook {
-  stage: Stage;
+  phase: Phase;
   mood: Mood;
-  /** 0-1 suitability per factor, for meters and markers */
   factors: Record<FactorKey, number>;
-  /** which factor is hurting the plant most right now (or null if happy) */
   problem: FactorKey | null;
+  ripeness: number;
+  fruitColor: FruitColor;
+  hasFlowers: boolean;
+  hasFruit: boolean;
 }
 
-/**
- * Derive everything the art layer needs. The "mood" is chosen from the most
- * severe problem so the plant visibly reacts to the worst condition.
- */
 export function plantLook(env: Environment, plant: PlantState): PlantLook {
   const factors = getFactors(env);
-  const stage = stageFromGrowth(plant.growth);
+  const phase = phaseOf(plant);
+  const fruitColor = fruitColorOf(plant);
+  const hasFruit = fruitColor !== 'none' && fruitColor !== 'rotten' ? true : plant.rotted;
+  const hasFlowers = phase === 'flowering';
 
   if (!plant.alive) {
-    return { stage, mood: 'dead', factors, problem: null };
+    return { phase, mood: 'dead', factors, problem: null, ripeness: plant.ripeness, fruitColor, hasFlowers: false, hasFruit };
   }
 
-  // Find the most-stressed factor (lowest suitability under the stress line).
   let problem: FactorKey | null = null;
   let worst = STRESS_THRESHOLD;
   for (const k of Object.keys(factors) as FactorKey[]) {
@@ -100,15 +123,10 @@ export function plantLook(env: Environment, plant: PlantState): PlantLook {
   }
 
   let mood: Mood = 'healthy';
-  if (problem === 'water') {
-    mood = env.water > FACTORS.water.highOpt ? 'drowning' : 'wilting';
-  } else if (problem === 'nutrients') {
-    mood = 'yellowing';
-  } else if (problem === 'temperature') {
-    mood = env.temperature < FACTORS.temperature.lowOpt ? 'cold' : 'scorched';
-  } else if (problem === 'light') {
-    mood = 'leggy';
-  }
+  if (problem === 'water') mood = env.water > FACTORS.water.highOpt ? 'drowning' : 'wilting';
+  else if (problem === 'nutrients') mood = 'yellowing';
+  else if (problem === 'temperature') mood = env.temperature < FACTORS.temperature.lowOpt ? 'cold' : 'scorched';
+  else if (problem === 'light') mood = 'leggy';
 
-  return { stage, mood, factors, problem };
+  return { phase, mood, factors, problem, ripeness: plant.ripeness, fruitColor, hasFlowers, hasFruit };
 }

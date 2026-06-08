@@ -1,115 +1,106 @@
 /**
- * Guided missions. Each isolates one or more variables so students run a fair
- * test (controlling the other variables) and discover the science themselves.
+ * Missions are milestones along ONE continuous plant's life cycle. They unlock
+ * in order and auto-advance when reached — the plant is never reset between them.
  * The Scientist's Note states the accurate science in kid-friendly language.
  */
-import type { Environment, FactorKey, PlantState } from '../sim/model';
-import { getFactors } from '../sim/model';
-import type { PlantLook } from '../sim/stages';
-import { stageFromGrowth } from '../sim/stages';
+import type { Environment, PlantState } from '../sim/model';
 
 export const IDEAL_ENV: Environment = { light: 8, water: 65, temperature: 24, nutrients: 55 };
+/** The plant starts in gentle-but-imperfect conditions so the gardener must help it. */
+export const START_ENV: Environment = { light: 3, water: 35, temperature: 16, nutrients: 25 };
 
 export interface MissionContext {
-  env: Environment;
   plant: PlantState;
-  look: PlantLook;
+  harvestCount: number;
 }
 
 export interface Mission {
   id: string;
   title: string;
-  /** kid-facing goal */
   goal: string;
   hint: string;
   scientistNote: string;
-  /** sliders the student controls; the rest are auto-set to ideal (controlled variables) */
-  controls: FactorKey[];
-  /** environment the mission starts from */
-  initialEnv: Environment;
-  /** completion check */
   success: (c: MissionContext) => boolean;
   successText: string;
 }
 
-const inBand = (env: Environment, key: FactorKey) => getFactors(env)[key] >= 0.99;
-
 export const MISSIONS: Mission[] = [
   {
-    id: 'wake-seed',
-    title: '1 · Wake Up the Seed',
-    goal: 'Give the seed what it needs to sprout: some sunlight and some water.',
-    hint: 'A seed needs water to wake up and light to grow toward. Try moving both sliders up a little.',
+    id: 'germinate',
+    title: '1 · Germination',
+    goal: 'Wake the sleeping seed so it sprouts.',
+    hint: 'A seed needs water to wake up and warmth to start. Raise the water and temperature.',
     scientistNote:
-      'Seeds are alive but resting. Water softens the seed and starts germination, and once the tiny shoot appears it needs light to make food. Without water or light, a seed cannot grow.',
-    controls: ['light', 'water'],
-    initialEnv: { ...IDEAL_ENV, light: 0, water: 0 },
-    success: (c) => stageFromGrowth(c.plant.growth) !== 'seed' && c.plant.alive,
-    successText: 'It sprouted! 🌱 Water woke the seed and light gave it energy to grow.',
+      'Germination is when a seed wakes from rest. Water makes the seed swell and the tiny root and shoot push out. Warmth tells the seed it is a good time to grow. Light matters most just after the shoot appears.',
+    success: (c) => c.plant.growth >= 4,
+    successText: 'Your seed germinated! 🌱 Water and warmth woke it up.',
   },
   {
-    id: 'just-right-temp',
-    title: '2 · Just-Right Temperature',
-    goal: 'Find the temperature where your tomato grows the fastest.',
-    hint: 'Tomatoes love warm — but not cold and not too hot. Watch the growth speed as you change the temperature.',
+    id: 'early-growth',
+    title: '2 · Early Growth',
+    goal: 'Grow the seedling\'s first true leaves.',
+    hint: 'Now the little plant needs sunlight to make food. Give it plenty of light and keep the soil moist.',
     scientistNote:
-      'Tomatoes grow best around 21–27°C (about 70–80°F). When it gets near freezing the plant stops growing and can die. When it gets too hot (above ~35°C) the flowers drop and fruit will not form. This is a "dose-response": too little AND too much are both bad.',
-    controls: ['temperature'],
-    initialEnv: { ...IDEAL_ENV, temperature: 6 },
-    success: (c) => c.plant.growth >= 30 && c.plant.alive && inBand(c.env, 'temperature'),
-    successText: 'Perfect warmth! 🌡️ Around 24°C is the sweet spot for a happy tomato.',
+      'A new seedling first opens two seed-leaves (cotyledons), then grows its first true leaves. From now on it makes its own food from sunlight, so light becomes very important.',
+    success: (c) => c.plant.growth >= 16,
+    successText: 'Strong little seedling! 🌿 Its leaves are catching sunlight to make food.',
   },
   {
-    id: 'goldilocks-water',
-    title: '3 · The Goldilocks Watering',
-    goal: 'Water your plant just right — not too little, not too much.',
-    hint: 'Too little water makes the plant wilt. Too much water drowns the roots. Find the middle.',
+    id: 'vegetative',
+    title: '3 · Vegetative Growth',
+    goal: 'Grow a big, leafy, healthy plant.',
+    hint: 'Leaves are powered by light and built from nutrients. Keep all four conditions in their green "ideal" zones.',
     scientistNote:
-      'Roots need both water AND air. With too little water the plant wilts and dries out. With too much water the soil has no air and the roots rot and drown. Plants like steady, moderate moisture — around 50–75% is ideal.',
-    controls: ['water'],
-    initialEnv: { ...IDEAL_ENV, water: 100 },
-    success: (c) => c.plant.growth >= 30 && c.plant.alive && inBand(c.env, 'water'),
-    successText: 'Just right! 💧 Moist soil — with air for the roots too — keeps a tomato healthy.',
+      'In the vegetative stage the plant builds lots of stems and leaves. Nutrients (especially nitrogen) help it grow green and strong. Remember Liebig\'s Law: the plant grows only as well as its WEAKEST condition.',
+    success: (c) => c.plant.growth >= 32,
+    successText: 'A lush, leafy tomato plant! 🌳 Great balancing of all its needs.',
   },
   {
-    id: 'feed-me',
-    title: '4 · Feed Me!',
-    goal: 'Your plant\'s leaves are turning yellow. Give it the nutrients it needs — but don\'t overfeed!',
-    hint: 'Yellow leaves often mean "hungry." Add nutrients until the leaves turn green again. Adding way too much hurts the plant as well.',
+    id: 'flowering',
+    title: '4 · Flowering',
+    goal: 'Help the plant make flowers.',
+    hint: 'A healthy, mature plant will start to flower. Keep conditions good and let it grow.',
     scientistNote:
-      'Plants pull nutrients (like nitrogen) from the soil to build green leaves. Too few nutrients and leaves turn yellow (chlorosis) and growth slows. Too much fertilizer "burns" the roots and the plant grows only leaves and few tomatoes. Balance is best.',
-    controls: ['nutrients'],
-    initialEnv: { ...IDEAL_ENV, nutrients: 4 },
-    success: (c) => c.plant.growth >= 45 && c.plant.alive && c.look.mood === 'healthy' && inBand(c.env, 'nutrients'),
-    successText: 'Green and growing! 🌿 The right amount of nutrients turned the leaves healthy again.',
+      'When a tomato plant is big and healthy, it makes yellow flowers. Each flower can become a tomato — but only if it is pollinated first!',
+    success: (c) => c.plant.growth >= 52,
+    successText: 'Beautiful yellow flowers! 🌼 Each one could become a tomato.',
   },
   {
-    id: 'grow-ripe',
-    title: '5 · Grow a Ripe Tomato',
-    goal: 'Balance light, water, temperature, AND nutrients to grow one ripe red tomato. 🍅',
-    hint: 'A plant grows only as well as its WORST condition. Check every slider — fix the one that is lagging behind.',
+    id: 'pollination',
+    title: '5 · Pollination',
+    goal: 'Pollinate the flowers so they can become fruit.',
+    hint: 'Press the 🐝 Pollinate button to shake the flowers (like wind or a bee would).',
     scientistNote:
-      'This is the Law of the Minimum: a plant can only grow as fast as its scarcest need allows. You can have perfect light, water, and warmth, but if nutrients are missing, growth still stalls. Great gardeners keep ALL four conditions good at once.',
-    controls: ['light', 'water', 'temperature', 'nutrients'],
-    initialEnv: { light: 3, water: 30, temperature: 14, nutrients: 20 },
-    success: (c) => c.plant.growth >= 92 && c.plant.alive,
-    successText: 'You grew a ripe tomato! 🍅🎉 You balanced every condition at once — true gardener science!',
+      'Tomato flowers carry both pollen and the part that becomes fruit. They need a shake — from wind or a buzzing bee — to move the pollen so fruit can form. Without pollination, the flowers fall off and no tomatoes grow.',
+    success: (c) => c.plant.pollinated,
+    successText: 'Pollinated! 🐝 Now the flowers can turn into tiny green tomatoes.',
+  },
+  {
+    id: 'ripening',
+    title: '6 · Fruit & Ripening',
+    goal: 'Grow the fruit and let it ripen from green to red.',
+    hint: 'Green tomatoes grow first, then slowly ripen. Keep conditions good — ripening takes time and patience.',
+    scientistNote:
+      'A tomato grows green and full-size first, then ripens: green → orange → red. Ripening makes it sweet. A red tomato is ready to pick. Picked too early it is hard and sour; left too long it gets soft and rots.',
+    success: (c) => c.plant.ripeness >= 80,
+    successText: 'Red and ripe! 🍅 Your tomato is ready to harvest at its best.',
+  },
+  {
+    id: 'harvest',
+    title: '7 · Harvest!',
+    goal: 'Harvest your tomato at peak ripeness for the best score.',
+    hint: 'Press 🧺 Harvest when the fruit is ripe and red. Wait too long and it will rot into compost!',
+    scientistNote:
+      'Harvesting at the right time gives the heaviest, tastiest fruit — and the most points. A rotten tomato is not wasted, though: it becomes compost that feeds the next plant. That is a circular, zero-waste garden! ♻️',
+    success: (c) => c.harvestCount >= 1,
+    successText: 'Harvested! 🧺🎉 You grew a tomato from seed to harvest. Try for an even better score!',
   },
 ];
 
-export const SANDBOX: Mission = {
-  id: 'sandbox',
-  title: 'Free Greenhouse',
-  goal: 'Experiment freely! Change anything and see what your tomato does.',
-  hint: 'Try extremes and combinations. Can you grow the healthiest, fastest tomato?',
-  scientistNote:
-    'In a free experiment, scientists change one thing at a time to see what each change does. Try it: change only the water and keep everything else the same.',
-  controls: ['light', 'water', 'temperature', 'nutrients'],
-  initialEnv: { ...IDEAL_ENV },
-  success: () => false,
-  successText: '',
-};
+export function missionIndex(id: string): number {
+  return MISSIONS.findIndex((m) => m.id === id);
+}
 
 export function missionById(id: string): Mission {
-  return MISSIONS.find((m) => m.id === id) ?? SANDBOX;
+  return MISSIONS.find((m) => m.id === id) ?? MISSIONS[0];
 }
