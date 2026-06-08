@@ -64,9 +64,12 @@ root): `VITE_API_URL=http://localhost:8787`. Without it, the app saves to localS
 
 ## Deploy
 
-- **Frontend → GitHub Pages:** pushing to `main` runs
-  [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which tests, builds, and
-  publishes `dist/`. (Vite `base` is `/tomatopia/`; override with `VITE_BASE` for other hosts.)
+- **Frontend → GitHub Pages:** the live site is published to the `gh-pages` branch (built
+  with Vite `base` `/tomatopia/`). To rebuild and redeploy: `npm run build` then publish
+  `dist/` to `gh-pages` (e.g. `npx gh-pages -d dist`).
+  A ready-made CI workflow lives at [`docs/ci/github-pages.yml`](docs/ci/github-pages.yml) —
+  move it to `.github/workflows/` to deploy automatically on every push (requires the repo's
+  token to have the `workflow` scope).
 - **Backend → Render/Fly/Railway:** see [`server/README.md`](server/README.md). A
   `render.yaml` is included for one-click Render deploys. The live frontend works without
   it (localStorage), so the backend is optional.
