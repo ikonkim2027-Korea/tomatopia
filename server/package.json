@@ -1,0 +1,25 @@
+{
+  "name": "tomatopia-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Tomatopia backend — privacy-safe garden saves (no child PII).",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "db:push": "prisma db push"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@prisma/client": "^6.2.1",
+    "fastify": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "prisma": "^6.2.1",
+    "tsx": "^4.19.2",
+    "typescript": "~6.0.2"
+  }
+}

@@ -1,0 +1,22 @@
+// Tomatopia data model. Deliberately stores NO child personal data:
+// only a self-chosen nickname, an optional class code, and the game state JSON.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Garden {
+  id        String   @id @default(cuid())
+  nickname  String
+  classCode String?
+  state     String // JSON-serialized save data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([classCode])
+}

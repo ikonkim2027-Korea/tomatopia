@@ -1,0 +1,19 @@
+# One-click Render deploy for the Tomatopia backend.
+# Render → New → Blueprint → select this repo.
+services:
+  - type: web
+    name: tomatopia-api
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install && npx prisma generate && npx prisma db push
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        value: file:/var/data/dev.db
+      - key: PORT
+        value: 8787
+    disk:
+      name: tomatopia-data
+      mountPath: /var/data
+      sizeGB: 1
